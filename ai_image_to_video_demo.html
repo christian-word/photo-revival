@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -145,6 +145,176 @@
             margin-bottom: 10px;
         }
 
+        .upload-section {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            padding: 20px 50px;
+            font-size: 1.3em;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(245, 87, 108, 0.4);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(245, 87, 108, 0.6);
+        }
+
+        .upload-btn:active {
+            transform: translateY(-1px);
+        }
+
+        /* Модальное окно */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            max-width: 500px;
+            width: 90%;
+            animation: slideIn 0.3s ease;
+        }
+
+        .modal-title {
+            font-size: 2em;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .modal-description {
+            text-align: center;
+            margin-bottom: 30px;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .input-group input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
+        }
+
+        .btn-cancel {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .error-message {
+            background: rgba(220, 53, 69, 0.2);
+            border: 2px solid rgba(220, 53, 69, 0.5);
+            color: #fff;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
         @keyframes fadeInDown {
             from {
                 opacity: 0;
@@ -191,6 +361,11 @@
         @media (max-width: 768px) {
             h1 {
                 font-size: 2em;
+            }
+
+            .upload-btn {
+                padding: 15px 35px;
+                font-size: 1.1em;
             }
         }
 
@@ -358,6 +533,15 @@
             </p>
         </div>
 
+        <!-- Кнопка загрузки -->
+        <div class="demo-section">
+            <div class="upload-section">
+                <h2 class="demo-title">🚀 Попробуйте сами!</h2>
+                <p class="description" style="margin-bottom: 30px;">Загрузите свою фотографию и увидите результат</p>
+                <button class="upload-btn" onclick="openModal()">📤 Загрузить фото</button>
+            </div>
+        </div>
+
         <!-- Возможности -->
         <div class="demo-section">
             <h2 class="demo-title">✨ Возможности технологии</h2>
@@ -382,6 +566,27 @@
                     <div class="feature-title">Автоматизация</div>
                     <p>Весь процесс от Ч/Б фото до видео занимает считанные минуты</p>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно -->
+    <div class="modal" id="uploadModal">
+        <div class="modal-content">
+            <h2 class="modal-title">🔐 Доступ к загрузке</h2>
+            <p class="modal-description">Введите код доступа для загрузки фотографий</p>
+            
+            <div class="error-message" id="errorMessage">
+                ❌ Неверный код доступа. Обратитесь к администратору.
+            </div>
+            
+            <div class="input-group">
+                <input type="password" id="accessCode" placeholder="Введите код доступа" />
+            </div>
+            
+            <div class="modal-buttons">
+                <button class="btn btn-cancel" onclick="closeModal()">Отмена</button>
+                <button class="btn btn-submit" onclick="checkCode()">Войти</button>
             </div>
         </div>
     </div>
@@ -413,6 +618,48 @@
                         overlay.style.opacity = '0';
                     }
                 });
+            }
+        });
+
+        // Модальное окно
+        function openModal() {
+            document.getElementById('uploadModal').classList.add('active');
+            document.getElementById('accessCode').value = '';
+            document.getElementById('errorMessage').classList.remove('show');
+        }
+
+        function closeModal() {
+            document.getElementById('uploadModal').classList.remove('active');
+        }
+
+        function checkCode() {
+            const errorMsg = document.getElementById('errorMessage');
+            errorMsg.classList.add('show');
+            
+            // Очистка поля после показа ошибки
+            setTimeout(() => {
+                document.getElementById('accessCode').value = '';
+            }, 500);
+        }
+
+        // Закрытие по клику вне окна
+        document.getElementById('uploadModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Закрытие по Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        // Отправка по Enter
+        document.getElementById('accessCode').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkCode();
             }
         });
     </script>
