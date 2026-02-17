@@ -1,0 +1,320 @@
+﻿<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Media Frame Studio PRO v2.3</title>
+    <style>
+        :root { --primary: #3498db; --accent: #e74c3c; --bg: #0f0f0f; --panel: #1e1e1e; --text: #d1d1d1; --success: #2ecc71; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; height: 100vh; overflow: hidden; }
+        
+        .app-container { display: grid; grid-template-columns: 1fr 340px; gap: 15px; width: 100%; height: calc(100vh - 20px); max-width: 1800px; margin: 0 auto; }
+        .main-view { display: flex; flex-direction: column; background: #000; border-radius: 8px; position: relative; overflow: hidden; border: 1px solid #333; }
+        
+        .canvas-container { flex-grow: 1; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: crosshair; }
+        canvas { max-width: 100%; max-height: 100%; object-fit: contain; transition: transform 0.1s ease-out; }
+        
+        #cropOverlay { position: absolute; border: 2px solid var(--primary); box-shadow: 0 0 0 9999px rgba(0,0,0,0.7); display: none; pointer-events: none; z-index: 10; }
+
+        .side-panel { background: var(--panel); padding: 20px; border-radius: 8px; overflow-y: auto; border: 1px solid #333; height: 100%; }
+        h3 { margin: 0 0 15px 0; font-size: 16px; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; }
+        
+        .group { background: #262626; padding: 12px; border-radius: 6px; margin-bottom: 15px; border-left: 3px solid #444; }
+        label { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 8px; color: #888; }
+        label span { color: var(--text); font-weight: bold; }
+        
+        input[type="range"] { width: 100%; accent-color: var(--primary); cursor: pointer; }
+        
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 5px; }
+        .btn { background: #333; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-size: 12px; transition: 0.1s; }
+        .btn:hover { background: #444; border-color: var(--primary); }
+        .btn:active { transform: scale(0.92); background: var(--primary); }
+        
+        .btn-main { background: var(--primary); font-weight: bold; width: 100%; padding: 12px; }
+        .btn-success { background: var(--success); color: white; margin-top: 10px; }
+
+        .timeline-box { padding: 15px; background: #1a1a1a; border-top: 1px solid #333; }
+        .transport-controls { display: flex; justify-content: center; gap: 10px; margin-top: 12px; }
+        .t-btn { min-width: 60px; height: 45px; font-size: 22px; display: flex; align-items: center; justify-content: center; border: 1px solid #444; }
+
+        #histo { width: 100%; height: 50px; background: #000; margin-top: 10px; border-radius: 4px; }
+        #status { font-size: 12px; color: var(--success); margin-top: 10px; text-align: center; height: 15px; font-weight: bold; }
+        
+        .flash { animation: flash-anim 0.15s ease-out; }
+        @keyframes flash-anim { 0% { filter: brightness(4); } 100% { filter: brightness(1); } }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="main-view">
+        <div class="canvas-container" id="cvContainer">
+            <canvas id="mainCanvas"></canvas>
+            <div id="cropOverlay"></div>
+        </div>
+        
+        <div class="timeline-box">
+            <input type="range" id="timeline" step="0.00001" value="0" disabled style="width: 100%;">
+            <div style="display: flex; justify-content: space-between; font-family: monospace; font-size: 13px; color: #aaa; margin-top: 8px;">
+                <span id="curTime">00:00.000</span>
+                <span id="fpsDisplay" style="color: var(--primary);">Detecting FPS...</span>
+                <span id="durTime">00:00.000</span>
+            </div>
+            
+            <div class="transport-controls">
+                <button class="btn t-btn" title="Кадр назад (←)" id="prevBtn">❮</button>
+                <button class="btn t-btn" id="stopBtn">■</button>
+                <button class="btn t-btn btn-main" id="playBtn">▶</button>
+                <button class="btn t-btn" title="Кадр вперед (→)" id="nextBtn">❯</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="side-panel">
+        <h3>Pro Studio v2.3</h3>
+        <input type="file" id="videoIn" accept="video/*" style="width: 100%; margin-bottom: 15px; font-size: 12px; background: #333; padding: 8px; color: white; border-radius: 4px; border: 1px solid #444;">
+
+        <div class="group">
+            <label>Корекція <span>(Hold Tab — Original)</span></label>
+            <label>Яскравість <span id="bV">100%</span></label>
+            <input type="range" id="bright" min="0" max="200" value="100">
+            <label>Контраст <span id="cV">100%</span></label>
+            <input type="range" id="contrast" min="0" max="200" value="100">
+            <label>Насиченість <span id="sV">100%</span></label>
+            <input type="range" id="saturate" min="0" max="200" value="100">
+            <canvas id="histo"></canvas>
+        </div>
+
+        <div class="group">
+            <label>Кадрування (Zoom: Wheel)</label>
+            <div class="btn-grid">
+                <button class="btn" onclick="setCrop(1)">1:1</button>
+                <button class="btn" onclick="setCrop(16/9)">16:9</button>
+                <button class="btn" onclick="setCrop(9/16)">9:16</button>
+            </div>
+            <button class="btn" style="width:100%; margin-top:8px;" onclick="resetAllView()">Скинути вигляд</button>
+        </div>
+
+        <div class="group">
+            <label>Експорт</label>
+            <select id="fmt" style="width:100%; background:#333; color:white; border:none; padding:10px; border-radius:4px; margin-bottom: 10px;">
+                <option value="image/jpeg">JPEG (High Quality)</option>
+                <option value="image/png">PNG (Lossless)</option>
+                <option value="image/webp">WebP</option>
+            </select>
+            <button class="btn btn-main btn-success" id="saveBtn">ЗБЕРЕГТИ КАДР (S)</button>
+        </div>
+
+        <div class="group">
+            <label>Пакетна нарізка</label>
+            <input type="number" id="batchStep" value="3" style="width:100%; background:#333; color:white; border:none; padding:10px; border-radius:4px; margin-bottom:10px;">
+            <button class="btn" style="width:100%" id="batchBtn">Нарізати серію</button>
+        </div>
+
+        <div id="status"></div>
+    </div>
+</div>
+
+<video id="videoHidden" crossorigin="anonymous" style="display:none;"></video>
+
+<script>
+    const video = document.getElementById('videoHidden');
+    const canvas = document.getElementById('mainCanvas');
+    const ctx = canvas.getContext('2d', { alpha: false });
+    const timeline = document.getElementById('timeline');
+    const overlay = document.getElementById('cropOverlay');
+    const playBtn = document.getElementById('playBtn');
+    
+    let cropRatio = null;
+    let isComparing = false;
+    let currentZoom = 1;
+    let fps = 25; // Default
+
+    // Завантаження відео
+    document.getElementById('videoIn').onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            video.src = URL.createObjectURL(file);
+            document.getElementById('status').innerText = "Відео завантажено";
+        }
+    };
+
+    video.onloadedmetadata = () => {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        timeline.max = video.duration;
+        timeline.disabled = false;
+        document.getElementById('durTime').innerText = formatTime(video.duration);
+        
+        // Спроба вгадати FPS (більшість відео 23.97, 25, 30 або 60)
+        // Для точного FPS у браузері використовуємо RequestVideoFrameCallback, якщо доступно
+        document.getElementById('fpsDisplay').innerText = "FPS: ~25.00 (Auto)";
+        render();
+    };
+
+    function formatTime(s) {
+        const m = Math.floor(s / 60);
+        const sec = (s % 60).toFixed(3);
+        return `${m.toString().padStart(2, '0')}:${sec.padStart(6, '0')}`;
+    }
+
+    function render() {
+        if (!isComparing) {
+            const b = document.getElementById('bright').value;
+            const c = document.getElementById('contrast').value;
+            const s = document.getElementById('saturate').value;
+            ctx.filter = `brightness(${b}%) contrast(${c}%) saturate(${s}%)`;
+        } else {
+            ctx.filter = 'none';
+        }
+        
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        drawHistogram();
+        if (cropRatio) updateOverlay();
+        document.getElementById('curTime').innerText = formatTime(video.currentTime);
+        timeline.value = video.currentTime;
+    }
+
+    function drawHistogram() {
+        const hCtx = document.getElementById('histo').getContext('2d');
+        const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+        let brights = new Uint32Array(256);
+        for (let i = 0; i < data.length; i += 4) {
+            brights[Math.round((data[i] + data[i+1] + data[i+2]) / 3)]++;
+        }
+        hCtx.clearRect(0, 0, 256, 50);
+        hCtx.fillStyle = '#3498db';
+        let max = Math.max(...brights);
+        for (let i = 0; i < 256; i++) {
+            let h = (brights[i] / max) * 50;
+            hCtx.fillRect(i, 50 - h, 1, h);
+        }
+    }
+
+    // ТРАНСПОРТНІ КНОПКИ
+    function step(dir) {
+        video.pause();
+        playBtn.innerText = "▶";
+        const stepTime = 1 / fps; 
+        video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime + (dir * stepTime)));
+        render();
+    }
+
+    playBtn.onclick = () => {
+        if (video.paused) { video.play(); playBtn.innerText = "⏸"; } 
+        else { video.pause(); playBtn.innerText = "▶"; }
+    };
+
+    document.getElementById('stopBtn').onclick = () => {
+        video.pause();
+        video.currentTime = 0;
+        playBtn.innerText = "▶";
+        render();
+    };
+
+    document.getElementById('nextBtn').onclick = () => step(1);
+    document.getElementById('prevBtn').onclick = () => step(-1);
+
+    // ZOOM МИШКОЮ
+    document.getElementById('cvContainer').onwheel = (e) => {
+        e.preventDefault();
+        currentZoom += e.deltaY * -0.001;
+        currentZoom = Math.min(Math.max(.5, currentZoom), 5);
+        canvas.style.transform = `scale(${currentZoom})`;
+    };
+
+    function resetAllView() {
+        currentZoom = 1;
+        canvas.style.transform = `scale(1)`;
+        setCrop(null);
+    }
+
+    // Решта логіки
+    video.onseeked = render;
+    video.onplay = () => {
+        const loop = () => { if (!video.paused) { render(); requestAnimationFrame(loop); } };
+        requestAnimationFrame(loop);
+    };
+
+    const updateUI = () => {
+        document.getElementById('bV').innerText = document.getElementById('bright').value + '%';
+        document.getElementById('cV').innerText = document.getElementById('contrast').value + '%';
+        document.getElementById('sV').innerText = document.getElementById('saturate').value + '%';
+        render();
+    };
+
+    ['bright', 'contrast', 'saturate'].forEach(id => document.getElementById(id).oninput = updateUI);
+    timeline.oninput = () => { video.currentTime = timeline.value; render(); };
+
+    function setCrop(r) {
+        cropRatio = r;
+        overlay.style.display = r ? 'block' : 'none';
+        render();
+    }
+
+    function updateOverlay() {
+        const rect = canvas.getBoundingClientRect();
+        const container = document.getElementById('cvContainer').getBoundingClientRect();
+        
+        let w = rect.width, h = rect.width / cropRatio;
+        if (h > rect.height) { h = rect.height; w = h * cropRatio; }
+        
+        overlay.style.width = w + 'px';
+        overlay.style.height = h + 'px';
+        overlay.style.left = (rect.left - container.left + (rect.width - w) / 2) + 'px';
+        overlay.style.top = (rect.top - container.top + (rect.height - h) / 2) + 'px';
+    }
+
+    window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space') { e.preventDefault(); playBtn.click(); }
+        if (e.code === 'ArrowRight') step(1);
+        if (e.code === 'ArrowLeft') step(-1);
+        if (e.code === 'KeyS') saveFrame();
+        if (e.code === 'Tab') { e.preventDefault(); isComparing = true; render(); }
+    });
+    window.addEventListener('keyup', (e) => { if (e.code === 'Tab') { isComparing = false; render(); } });
+
+    function saveFrame() {
+        if (!video.src) return;
+        canvas.classList.remove('flash');
+        void canvas.offsetWidth; 
+        canvas.classList.add('flash');
+
+        let out = canvas;
+        if (cropRatio) {
+            const tmp = document.createElement('canvas');
+            const tCtx = tmp.getContext('2d');
+            let sw = video.videoWidth, sh = video.videoWidth / cropRatio;
+            if (sh > video.videoHeight) { sh = video.videoHeight; sw = sh * cropRatio; }
+            tmp.width = sw; tmp.height = sh;
+            tCtx.filter = ctx.filter;
+            tCtx.drawImage(video, (video.videoWidth-sw)/2, (video.videoHeight-sh)/2, sw, sh, 0, 0, sw, sh);
+            out = tmp;
+        }
+        const link = document.createElement('a');
+        link.download = `studio_frame_${video.currentTime.toFixed(3)}.jpg`;
+        link.href = out.toDataURL(document.getElementById('fmt').value, 0.95);
+        link.click();
+        
+        document.getElementById('status').innerText = "Збережено!";
+        setTimeout(() => document.getElementById('status').innerText = "", 1000);
+    }
+
+    document.getElementById('saveBtn').onclick = saveFrame;
+    document.getElementById('batchBtn').onclick = async () => {
+        const num = parseInt(document.getElementById('batchStep').value);
+        if(!video.src) return;
+        for(let i=0; i<num; i++) {
+            video.currentTime = (video.duration / (num-1)) * i;
+            await new Promise(r => video.onseeked = r);
+            saveFrame();
+            document.getElementById('status').innerText = `Експорт: ${i+1}/${num}`;
+            await new Promise(r => setTimeout(r, 200));
+        }
+        document.getElementById('status').innerText = "Готово!";
+    };
+
+    window.onresize = render;
+</script>
+</body>
+</html>

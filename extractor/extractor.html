@@ -1,0 +1,200 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Универсальный экстрактор кадров</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 100vh; 
+            background: #f0f2f5; 
+            margin: 0; 
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        
+        .card { 
+            background: white; 
+            padding: 1.5rem; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+            text-align: center; 
+            width: 100%; 
+            max-width: 600px; 
+            box-sizing: border-box;
+        }
+
+        h2 { font-size: 1.5rem; margin-bottom: 10px; }
+        
+        .controls { margin-top: 15px; display: flex; flex-direction: column; gap: 12px; }
+        
+        input[type="range"] { 
+            width: 100%; 
+            height: 30px; 
+            cursor: pointer; 
+        }
+        
+        .btn-group { 
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* Две колонки для кнопок управления */
+            gap: 10px; 
+        }
+        
+        button { 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 15px 10px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 15px; 
+            font-weight: 500;
+            transition: 0.2s; 
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        button:active { transform: scale(0.96); opacity: 0.9; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+
+        /* Специфические цвета для разных действий */
+        #playPauseBtn { background: #6c757d; } /* Серый для управления */
+        #extractBtn { background: #007bff; grid-column: span 2; } /* Синий на всю ширину */
+        
+        .pro-btn {
+            background: #28a745 !important;
+            margin-top: 10px;
+            font-weight: bold;
+            grid-column: span 2;
+        }
+        
+        #videoPreview { 
+            width: 100%; 
+            max-height: 45vh; 
+            border-radius: 8px; 
+            background: #000; 
+            margin-top: 15px; 
+        }
+        
+        #status { margin-top: 15px; color: #666; font-size: 0.85rem; min-height: 1.2em; }
+        .time-display { font-weight: bold; color: #333; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Экстрактор кадров</h2>
+    
+    <input type="file" id="videoInput" accept="video/*" style="width: 100%;">
+    
+    <video id="videoPreview" playsinline></video>
+
+    <div class="controls">
+        <div id="status">Выберите видео файл</div>
+        
+        <div>
+            <span id="currentTime" class="time-display">0.00</span> / <span id="duration" class="time-display">0.00</span> сек.
+        </div>
+        
+        <input type="range" id="timeline" step="0.01" value="0" disabled>
+        
+        <div class="btn-group">
+            <button id="playPauseBtn">▶ Старт</button>
+            <button id="lastFrameBtn">В конец ⏭</button>
+            <button id="extractBtn">📸 Скачать текущий кадр</button>
+            
+            <button class="pro-btn" onclick="location.href='extractorPro.html'">
+                🚀 Перейти в Pro Studio v2.3
+            </button>
+        </div>
+    </div>
+</div>
+
+<canvas id="canvas" style="display:none;"></canvas>
+
+<script>
+    const videoInput = document.getElementById('videoInput');
+    const video = document.getElementById('videoPreview');
+    const timeline = document.getElementById('timeline');
+    const extractBtn = document.getElementById('extractBtn');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const lastFrameBtn = document.getElementById('lastFrameBtn');
+    const status = document.getElementById('status');
+    const canvas = document.getElementById('canvas');
+    const currentTimeDisplay = document.getElementById('currentTime');
+    const durationDisplay = document.getElementById('duration');
+
+    videoInput.onchange = function() {
+        const file = videoInput.files[0];
+        if (file) {
+            video.src = URL.createObjectURL(file);
+            status.innerText = "Видео загружено";
+            timeline.disabled = false;
+        }
+    };
+
+    video.onloadedmetadata = function() {
+        timeline.max = video.duration;
+        durationDisplay.innerText = video.duration.toFixed(2);
+    };
+
+    // Обновление интерфейса при проигрывании
+    video.ontimeupdate = function() {
+        timeline.value = video.currentTime;
+        currentTimeDisplay.innerText = video.currentTime.toFixed(2);
+    };
+
+    // Логика кнопки Старт/Стоп
+    playPauseBtn.onclick = function() {
+        if (!video.src) return;
+        
+        if (video.paused) {
+            video.play();
+            playPauseBtn.innerText = "⏸ Стоп";
+        } else {
+            video.pause();
+            playPauseBtn.innerText = "▶ Старт";
+        }
+    };
+
+    // Если видео закончилось само
+    video.onended = function() {
+        playPauseBtn.innerText = "▶ Старт";
+    };
+
+    timeline.oninput = function() {
+        video.currentTime = timeline.value;
+    };
+
+    lastFrameBtn.onclick = function() {
+        video.currentTime = video.duration;
+        video.pause();
+        playPauseBtn.innerText = "▶ Старт";
+    };
+
+    extractBtn.onclick = function() {
+        if (!video.src) {
+            status.innerText = "Сначала выберите файл!";
+            return;
+        }
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        const link = document.createElement('a');
+        link.download = `frame_${video.currentTime.toFixed(2)}s.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        
+        status.innerText = `Кадр сохранен (${video.videoWidth}x${video.videoHeight})`;
+    };
+</script>
+
+</body>
+</html>
