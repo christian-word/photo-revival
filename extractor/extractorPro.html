@@ -3,149 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Media Frame Studio PRO v2.3 Mobile Live</title>
+    <title>Media Frame Studio PRO v2.3 Fixed</title>
     <style>
         :root { --primary: #3498db; --accent: #e74c3c; --bg: #0f0f0f; --panel: #1e1e1e; --text: #d1d1d1; --success: #2ecc71; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        
-        body { 
-            font-family: 'Segoe UI', sans-serif; 
-            background: var(--bg); 
-            color: var(--text); 
-            margin: 0; 
-            padding: 0; 
-            display: flex; 
-            flex-direction: column; 
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* Видео-зона */
-        .main-view { 
-            flex: 0 0 auto; 
-            background: #000; 
-            border-bottom: 1px solid #333;
-            z-index: 10;
-        }
-
-        .canvas-container { 
-            width: 100%; 
-            aspect-ratio: 16/9; 
-            position: relative; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            overflow: hidden; 
-            background: #050505;
-        }
-        
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .main-view { flex: 0 0 auto; background: #000; border-bottom: 1px solid #333; z-index: 10; }
+        .canvas-container { width: 100%; aspect-ratio: 16/9; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #050505; }
         canvas { max-width: 100%; max-height: 100%; object-fit: contain; }
         #cropOverlay { position: absolute; border: 2px solid var(--primary); box-shadow: 0 0 0 9999px rgba(0,0,0,0.7); display: none; pointer-events: none; }
-
-        /* Управление таймлайном */
         .timeline-box { padding: 12px; background: #1a1a1a; }
         #timeline { width: 100%; height: 30px; accent-color: var(--primary); margin: 0; cursor: pointer; }
-        
-        .time-info { 
-            display: flex; 
-            justify-content: space-between; 
-            font-family: monospace; 
-            font-size: 12px; 
-            color: #888; 
-            margin-bottom: 10px; 
-        }
-
+        .time-info { display: flex; justify-content: space-between; font-family: monospace; font-size: 12px; color: #888; margin-bottom: 10px; }
         .transport-controls { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-        .t-btn { 
-            height: 50px; 
-            font-size: 20px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            background: #333; 
-            border: 1px solid #444; 
-            border-radius: 8px; 
-            color: white; 
-            cursor: pointer;
-            outline: none;
-        }
+        .t-btn { height: 50px; font-size: 20px; display: flex; align-items: center; justify-content: center; background: #333; border: 1px solid #444; border-radius: 8px; color: white; cursor: pointer; outline: none; }
         .btn-main { background: var(--primary); border: none; }
-
-        /* Панель настроек */
-        .side-panel { 
-            flex: 1; 
-            overflow-y: auto; 
-            padding: 15px; 
-            background: var(--panel); 
-            -webkit-overflow-scrolling: touch;
-        }
-
+        .side-panel { flex: 1; overflow-y: auto; padding: 15px; background: var(--panel); -webkit-overflow-scrolling: touch; }
         h3 { margin: 0 0 15px 0; font-size: 14px; color: var(--primary); text-transform: uppercase; text-align: center; }
-        
         .group { background: #262626; padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 3px solid #444; }
         label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 10px; color: #888; }
         label span { color: var(--text); font-weight: bold; }
-
-        /* Стили для ползунков */
-        input[type="range"] { 
-            width: 100%; 
-            height: 35px; 
-            accent-color: var(--primary); 
-            margin-bottom: 5px;
-        }
-
+        input[type="range"] { width: 100%; height: 35px; accent-color: var(--primary); margin-bottom: 5px; }
         .btn-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-        .btn { 
-            background: #444; 
-            color: white; 
-            border: none; 
-            padding: 12px; 
-            border-radius: 6px; 
-            font-size: 14px; 
-            font-weight: bold; 
-            cursor: pointer;
-        }
-        
+        .btn { background: #444; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; }
         .btn-success { background: var(--success); width: 100%; height: 55px; margin-top: 10px; font-size: 16px; color: black; }
-
-        select, input[type="file"], input[type="number"] { 
-            width: 100%; 
-            background: #333; 
-            color: white; 
-            border: 1px solid #444; 
-            padding: 12px; 
-            border-radius: 6px; 
-            font-size: 16px;
-            margin-bottom: 10px;
-        }
-
-        #histo { width: 100%; height: 40px; background: #000; border-radius: 4px; margin-top: 10px; }
-        
-        #status { 
-            position: fixed; 
-            bottom: 20px; 
-            left: 50%; 
-            transform: translateX(-50%); 
-            background: var(--success); 
-            color: black; 
-            padding: 8px 20px; 
-            border-radius: 20px; 
-            font-weight: bold; 
-            opacity: 0; 
-            transition: 0.3s; 
-            z-index: 100;
-            pointer-events: none;
-        }
-
+        select, input[type="file"], input[type="number"] { width: 100%; background: #333; color: white; border: 1px solid #444; padding: 12px; border-radius: 6px; font-size: 16px; margin-bottom: 10px; }
+        #histo { width: 100%; height: 60px; background: #000; border-radius: 4px; margin-top: 10px; display: block; }
+        #status { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--success); color: black; padding: 8px 20px; border-radius: 20px; font-weight: bold; opacity: 0; transition: 0.3s; z-index: 100; pointer-events: none; }
         .flash { animation: flash-anim 0.15s ease-out; }
         @keyframes flash-anim { 0% { filter: brightness(3); } 100% { filter: brightness(1); } }
-
-        @media (min-width: 768px) {
-            body { flex-direction: row; }
-            .main-view { flex: 1; height: 100vh; }
-            .side-panel { width: 360px; flex: none; }
-            .canvas-container { height: calc(100vh - 160px); aspect-ratio: auto; }
-        }
+        @media (min-width: 768px) { body { flex-direction: row; } .main-view { flex: 1; height: 100vh; } .side-panel { width: 360px; flex: none; } .canvas-container { height: calc(100vh - 160px); aspect-ratio: auto; } }
     </style>
 </head>
 <body>
@@ -155,14 +42,9 @@
         <canvas id="mainCanvas"></canvas>
         <div id="cropOverlay"></div>
     </div>
-    
     <div class="timeline-box">
         <input type="range" id="timeline" step="0.00001" value="0" disabled>
-        <div class="time-info">
-            <span id="curTime">00:00.000</span>
-            <span id="durTime">00:00.000</span>
-        </div>
-        
+        <div class="time-info"><span id="curTime">00:00.000</span><span id="durTime">00:00.000</span></div>
         <div class="transport-controls">
             <button class="t-btn" id="prevBtn">❮</button>
             <button class="t-btn" id="stopBtn">■</button>
@@ -173,27 +55,18 @@
 </div>
 
 <div class="side-panel">
-    <h3>Pro Studio v2.3 Live</h3>
-    
+    <h3>Pro Studio v2.3 Fixed</h3>
+    <div class="group"><label>Відеофайл</label><input type="file" id="videoIn" accept="video/*"></div>
     <div class="group">
-        <label>Відеофайл</label>
-        <input type="file" id="videoIn" accept="video/*">
-    </div>
-
-    <div class="group">
-        <label>Корекція (Живе оновлення)</label>
-        <label>Яскравість <span id="bV">100%</span></label>
+        <label>Гістограма та Корекція</label>
+        <canvas id="histo"></canvas>
+        <label style="margin-top:10px;">Яскравість <span id="bV">100%</span></label>
         <input type="range" id="bright" min="0" max="200" value="100">
-        
         <label>Контраст <span id="cV">100%</span></label>
         <input type="range" id="contrast" min="0" max="200" value="100">
-        
         <label>Насиченість <span id="sV">100%</span></label>
         <input type="range" id="saturate" min="0" max="200" value="100">
-        
-        <canvas id="histo"></canvas>
     </div>
-
     <div class="group">
         <label>Кадрування</label>
         <div class="btn-grid">
@@ -203,7 +76,6 @@
         </div>
         <button class="btn" style="width:100%; margin-top:10px; background:#333;" onclick="resetAllView()">Скинути вигляд</button>
     </div>
-
     <div class="group">
         <label>Експорт</label>
         <select id="fmt">
@@ -213,7 +85,6 @@
         </select>
         <button class="btn btn-main btn-success" id="saveBtn">ЗБЕРЕГТИ КАДР</button>
     </div>
-
     <div class="group">
         <label>Пакетна нарізка</label>
         <input type="number" id="batchStep" value="3">
@@ -227,7 +98,7 @@
 <script>
     const video = document.getElementById('videoHidden');
     const canvas = document.getElementById('mainCanvas');
-    const ctx = canvas.getContext('2d', { alpha: false });
+    const ctx = canvas.getContext('2d', { alpha: false, willReadFrequently: true });
     const timeline = document.getElementById('timeline');
     const overlay = document.getElementById('cropOverlay');
     const playBtn = document.getElementById('playBtn');
@@ -235,7 +106,7 @@
     
     let cropRatio = null;
     let fps = 25; 
-    let isRendering = false;
+    let lastHistoTime = 0;
 
     function showStatus(text) {
         statusEl.innerText = text;
@@ -266,23 +137,24 @@
         return `${m.toString().padStart(2, '0')}:${sec.padStart(5, '0')}`;
     }
 
-    // Основная функция отрисовки
     function render() {
-        if (isRendering && !video.paused) return; // Предотвращаем перегрузку при игре
+        if (!video.videoWidth) return;
         
         const b = document.getElementById('bright').value;
         const c = document.getElementById('contrast').value;
         const s = document.getElementById('saturate').value;
         
-        // Применяем фильтры
         ctx.filter = `brightness(${b}%) contrast(${c}%) saturate(${s}%)`;
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         
-        // Гистограмма только если видео на паузе (для экономии ресурсов мобилы)
-        if (video.paused) drawHistogram();
+        // Обновляем гистограмму не чаще 10 раз в секунду для стабильности
+        const now = Date.now();
+        if (now - lastHistoTime > 100) {
+            drawHistogram();
+            lastHistoTime = now;
+        }
         
         if (cropRatio) updateOverlay();
-        
         document.getElementById('curTime').innerText = formatTime(video.currentTime);
         timeline.value = video.currentTime;
     }
@@ -290,77 +162,55 @@
     function drawHistogram() {
         const hCanvas = document.getElementById('histo');
         const hCtx = hCanvas.getContext('2d');
-        const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-        let brights = new Uint32Array(256);
-        for (let i = 0; i < data.length; i += 4) {
-            brights[Math.round((data[i] + data[i+1] + data[i+2]) / 3)]++;
-        }
-        hCtx.clearRect(0, 0, hCanvas.width, hCanvas.height);
-        hCtx.fillStyle = '#3498db';
-        let max = Math.max(...brights);
-        for (let i = 0; i < 256; i++) {
-            let h = (brights[i] / max) * hCanvas.height;
-            hCtx.fillRect(i * (hCanvas.width/256), hCanvas.height - h, 1, h);
-        }
+        try {
+            const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+            let brights = new Uint32Array(256);
+            for (let i = 0; i < data.length; i += 80) { // Еще больше увеличили шаг для легкости
+                const avg = (data[i] + data[i+1] + data[i+2]) / 3;
+                brights[Math.round(avg)]++;
+            }
+            hCtx.clearRect(0, 0, hCanvas.width, hCanvas.height);
+            hCtx.fillStyle = '#3498db';
+            let max = Math.max(...brights);
+            if (max === 0) max = 1;
+            for (let i = 0; i < 256; i++) {
+                let h = (brights[i] / max) * hCanvas.height;
+                hCtx.fillRect(i * (hCanvas.width/256), hCanvas.height - h, 1, h);
+            }
+        } catch(e) { console.warn("Histo error", e); }
     }
 
     function step(dir) {
         video.pause();
         playBtn.innerText = "▶";
         video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime + (dir * (1/fps))));
-        // render вызовется автоматически по событию seeked
     }
 
     playBtn.onclick = () => {
-        if (video.paused) { 
-            video.play(); 
-            playBtn.innerText = "⏸"; 
-        } else { 
-            video.pause(); 
-            playBtn.innerText = "▶"; 
-            render(); // Финальный рендер с гистограммой
-        }
+        if (video.paused) { video.play(); playBtn.innerText = "⏸"; } 
+        else { video.pause(); playBtn.innerText = "▶"; render(); }
     };
 
-    document.getElementById('stopBtn').onclick = () => {
-        video.pause(); video.currentTime = 0; playBtn.innerText = "▶";
-    };
-
+    document.getElementById('stopBtn').onclick = () => { video.pause(); video.currentTime = 0; playBtn.innerText = "▶"; };
     document.getElementById('nextBtn').onclick = () => step(1);
     document.getElementById('prevBtn').onclick = () => step(-1);
 
     video.onseeked = render;
-
-    // Цикл анимации при проигрывании
     video.onplay = () => {
-        const loop = () => { 
-            if (!video.paused) { 
-                render(); 
-                requestAnimationFrame(loop); 
-            } 
-        };
+        const loop = () => { if (!video.paused) { render(); requestAnimationFrame(loop); } };
         requestAnimationFrame(loop);
     };
 
-    // Слушатели для ползунков (input срабатывает ПРИ ДВИЖЕНИИ)
     ['bright', 'contrast', 'saturate'].forEach(id => {
-        const input = document.getElementById(id);
-        input.addEventListener('input', () => {
-            document.getElementById(id + 'V').innerText = input.value + '%';
-            render(); // Мгновенное обновление кадра
+        document.getElementById(id).addEventListener('input', () => {
+            document.getElementById(id + 'V').innerText = document.getElementById(id).value + '%';
+            if (video.paused) render();
         });
     });
 
-    timeline.oninput = () => { 
-        video.currentTime = timeline.value; 
-        // render подхватит событие seeked
-    };
+    timeline.oninput = () => { video.currentTime = timeline.value; };
 
-    function setCrop(r) {
-        cropRatio = r;
-        overlay.style.display = r ? 'block' : 'none';
-        render();
-    }
+    function setCrop(r) { cropRatio = r; overlay.style.display = r ? 'block' : 'none'; render(); }
 
     function updateOverlay() {
         const rect = canvas.getBoundingClientRect();
@@ -375,10 +225,7 @@
 
     function saveFrame() {
         if (!video.src) return;
-        canvas.classList.remove('flash');
-        void canvas.offsetWidth; 
-        canvas.classList.add('flash');
-
+        canvas.classList.remove('flash'); void canvas.offsetWidth; canvas.classList.add('flash');
         let out = canvas;
         if (cropRatio) {
             const tmp = document.createElement('canvas');
@@ -398,32 +245,25 @@
     }
 
     document.getElementById('saveBtn').onclick = saveFrame;
-    
     document.getElementById('batchBtn').onclick = async () => {
         const num = parseInt(document.getElementById('batchStep').value);
         if(!video.src) return;
-        showStatus(`Початок експорту: ${num} кадрів`);
+        showStatus(`Експорт: ${num} кадрів`);
         for(let i=0; i<num; i++) {
             video.currentTime = (video.duration / (num-1)) * i;
             await new Promise(r => video.onseeked = r);
             saveFrame();
-            await new Promise(r => setTimeout(r, 500)); // Пауза для мобилы
+            await new Promise(r => setTimeout(r, 500));
         }
         showStatus("Готово!");
     };
 
     function resetAllView() {
         setCrop(null);
-        document.getElementById('bright').value = 100;
-        document.getElementById('contrast').value = 100;
-        document.getElementById('saturate').value = 100;
-        document.getElementById('bV').innerText = '100%';
-        document.getElementById('cV').innerText = '100%';
-        document.getElementById('sV').innerText = '100%';
+        ['bright', 'contrast', 'saturate'].forEach(id => { document.getElementById(id).value = 100; document.getElementById(id+'V').innerText = '100%'; });
         render();
         showStatus("Скинуто");
     }
-
     window.onresize = render;
 </script>
 </body>
